@@ -1,0 +1,204 @@
+from tkinter import *
+from tkinter import messagebox
+from PIL import Image, ImageTk
+import random
+import os
+
+# Cores
+AZUL = "#4A90E2"
+VERMELHO = "#E94B3C"
+AMARELO = "#F9D342"
+VERDE = "#50C878"
+BRANCO = "#FFF7F0"
+CINZENTO = "#D9D9D9"
+
+# Pasta onde estão as imagens
+DIRETORIO_IMAGENS = "Bandeiras"
+
+# Dicionário final com os nomes reais (como você queria)
+bandeiras = {
+    "Portugal": ("Portugal.jpg", "Europa"),
+    "Espanha": ("Espanha.jpg", "Europa"),
+    "França": ("França.jpg", "Europa"),
+    "Alemanha": ("Alemanha.png", "Europa"),
+    "Italia": ("Italia.png", "Europa"),
+    "Reino Unido": ("Reino_Unido.png", "Europa"),
+    "Estados Unidos": ("Estados_Unidos.jpg", "América do Norte"),
+    "Canada": ("Canada.jpg", "América do Norte"),
+    "Brasil": ("Brasil.jpg", "América do Sul"),
+    "Argentina": ("Argentina.jpg", "América do Sul"),
+    "Mexico": ("Mexico.jpg", "América do Norte"),
+    "Japao": ("Japão.jpg", "Ásia"),
+    "China": ("China.jpg", "Ásia"),
+    "India": ("India.jpg", "Ásia"),
+    "Coreia do Sul": ("Coreia_do_sul.jpg", "Ásia"),
+    "Australia": ("Australia.jpg", "Oceania"),
+    "Nova Zelandia": ("Nova_Zelandia.png", "Oceania"),
+    "Africa do Sul": ("Africa_do_sul.png", "África"),
+    "Egito": ("Egito.png", "África"),
+    "Nigeria": ("Nigeria.jpg", "África"),
+    "Russia": ("Russia.jpg", "Europa/Ásia"),
+    "Ucrania": ("Ucrania.png", "Europa"),
+    "Turquia": ("Turquia.jpg", "Eurásia"),
+    "Grecia": ("Grecia.png", "Europa"),
+    "Suécia": ("Suecia.jpg", "Europa"),
+    "Noruega": ("Noruega.png", "Europa"),
+    "Finlandia": ("Finlandia.png", "Europa"),
+    "Polónia": ("Polonia.png", "Europa"),
+    "Paises Baixos": ("Paises_baixos.jpg", "Europa"),
+    "Suíça": ("Suiça.jpg", "Europa"),
+    "Angola": ("Angola.jpg", "África"),
+    "Irlanda": ("Irlanda.jpg", "Europa"),
+    "Armenia": ("Armenia.jpg", "Europa"),
+    "Peru": ("Peru.jpg", "América do Sul")
+}
+
+# Inicializar janela
+pagina = Tk()
+pagina.title("🌍 Quiz de Bandeiras")
+pagina.geometry("360x520+500+150")
+pagina.resizable(False, False)
+pagina.configure(bg=BRANCO)
+
+vidas = 5
+pontuacao = 0
+indice_estudo = 0
+
+
+def limpar_pagina():
+    for widget in pagina.winfo_children():
+        widget.destroy()
+
+def criar_cabecalho(texto):
+    cabecalho = Frame(pagina, bg=AZUL)
+    cabecalho.place(x=0, y=0, width=360, height=80)
+    label = Label(cabecalho, text=texto, font="Arial 18 bold", fg=BRANCO, bg=AZUL)
+    label.pack(pady=20)
+
+def botao_voltar():
+    return Button(pagina, text="🏠 Menu", command=mostrar_menu_principal,
+                  font="Arial 10 bold", bg=CINZENTO, fg="black", relief="flat")
+
+def carregar_imagem(nome_arquivo):
+    try:
+        caminho = os.path.join(DIRETORIO_IMAGENS, nome_arquivo)
+        imagem = Image.open(caminho)
+        imagem = imagem.resize((140, 90))
+        return ImageTk.PhotoImage(imagem)
+    except Exception as e:
+        print(f"Erro ao carregar imagem: {nome_arquivo} - {e}")
+        return None
+
+def mostrar_menu_principal():
+    global vidas, pontuacao
+    vidas = 5
+    pontuacao = 0
+    limpar_pagina()
+    criar_cabecalho("🌍 Quiz de Bandeiras")
+
+    btn_quiz = Button(pagina, text="🎮 Começar Quiz", command=mostrar_pagina_quiz,
+                      font="Arial 14", bg=VERDE, fg="white", relief="flat")
+    btn_quiz.place(width=200, height=50, x=80, y=150)
+
+    btn_estudo = Button(pagina, text="📘 Estudar Bandeiras", command=mostrar_pagina_estudo,
+                        font="Arial 14", bg=AMARELO, fg="black", relief="flat")
+    btn_estudo.place(width=200, height=50, x=80, y=220)
+
+def mostrar_pagina_quiz():
+    global vidas, pontuacao
+
+    limpar_pagina()
+    criar_cabecalho(f"❤️ Vidas: {vidas}   Pontos: {pontuacao}")
+
+    if vidas <= 0:
+        messagebox.showinfo("Fim de Jogo!", f" As suas vidas acabaram!\nPontuação final: {pontuacao}")
+        mostrar_menu_principal()
+        return
+
+    pais_correto = random.choice(list(bandeiras.keys()))
+    imagem_nome = bandeiras[pais_correto][0]
+    imagem = carregar_imagem(imagem_nome)
+
+    if imagem:
+        img_label = Label(pagina, image=imagem, bg=BRANCO)
+        img_label.image = imagem
+        img_label.place(x=110, y=100)
+
+    opcoes = list(bandeiras.keys())
+    opcoes.remove(pais_correto)
+    opcoes_erradas = random.sample(opcoes, 3)
+    todas_opcoes = opcoes_erradas + [pais_correto]
+    random.shuffle(todas_opcoes)
+
+    def verificar_resposta(opcao_escolhida):
+        nonlocal pais_correto
+        global vidas, pontuacao
+        if opcao_escolhida == pais_correto:
+            pontuacao += 1
+            messagebox.showinfo("✅ Correto!", f"A bandeira é do(a) {pais_correto}!")
+        else:
+            vidas -= 1
+            messagebox.showerror("❌ Errado", f"A resposta certa era: {pais_correto}")
+
+        mostrar_pagina_quiz()
+
+    y = 220
+    for opcao in todas_opcoes:
+        botao = Button(pagina, text=opcao, command=lambda o=opcao: verificar_resposta(o),
+                       font="Arial 12", bg=VERMELHO, fg="white", relief="flat")
+        botao.place(width=200, height=40, x=80, y=y)
+        y += 50
+
+    voltar = botao_voltar()
+    voltar.place(x=20, y=470)
+
+def mostrar_pagina_estudo():
+    limpar_pagina()
+    criar_cabecalho("📖 Estuda as Bandeiras")
+
+    global indice_estudo
+    lista_paises = list(bandeiras.keys())
+    pais = lista_paises[indice_estudo]
+    imagem_nome, continente = bandeiras[pais]
+
+    imagem = carregar_imagem(imagem_nome)
+    if imagem:
+        img_label = Label(pagina, image=imagem, bg=BRANCO)
+        img_label.image = imagem
+        img_label.place(x=110, y=100)
+
+    info = f"País: {pais}\nContinente: {continente}"
+    label_info = Label(pagina, text=info, font="Arial 12", bg=BRANCO, fg="black", justify=LEFT)
+    label_info.place(x=20, y=210)
+
+    def proximo():
+        global indice_estudo
+        if indice_estudo < len(lista_paises) - 1:
+            indice_estudo += 1
+        else:
+            indice_estudo = 0
+        mostrar_pagina_estudo()
+
+    def anterior():
+        global indice_estudo
+        if indice_estudo > 0:
+            indice_estudo -= 1
+        else:
+            indice_estudo = len(lista_paises) - 1
+        mostrar_pagina_estudo()
+
+    btn_anterior = Button(pagina, text="⬅ Anterior", command=anterior,
+                         font="Arial 11", bg=AZUL, fg=BRANCO, relief="flat")
+    btn_anterior.place(width=100, height=35, x=40, y=290)
+
+    btn_proximo = Button(pagina, text="Próximo ➡", command=proximo,
+                        font="Arial 11", bg=AZUL, fg=BRANCO, relief="flat")
+    btn_proximo.place(width=100, height=35, x=220, y=290)
+
+    voltar = botao_voltar()
+    voltar.place(x=20, y=470)
+
+
+# Iniciar app
+mostrar_menu_principal()
+pagina.mainloop()
